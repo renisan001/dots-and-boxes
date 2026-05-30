@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dots & Boxes Online — Play Instantly, No Sign-Up</title>
+  <meta name="description" content="Connect dots, close boxes, and outsmart your opponent in this classic real-time multiplayer strategy game. No sign-up required." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-mesh"></div>
+
+  <nav class="navbar">
+    <div class="container">
+      <div class="logo-mark">⬛</div>
+      <span class="logo-text">Dots &amp; Boxes</span>
+      <div class="nav-spacer"></div>
+      <span id="online-count" class="text-sm text-muted"></span>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="container">
+
+      <!-- Hero -->
+      <section class="hero">
+        <div class="hero-tag">🎮 No Sign-Up · Instant Play · Real-Time</div>
+        <h1 class="hero-title">
+          Connect Dots.<br/>
+          <span>Claim Boxes.</span> Win.
+        </h1>
+        <p class="hero-sub">
+          The classic Dots &amp; Boxes strategy game, now online.
+          Create a room, share the link, and play instantly.
+        </p>
+
+        <!-- Animated dot grid preview -->
+        <div class="dot-grid" id="dot-grid" style="grid-template-columns: repeat(5,1fr); width:fit-content;"></div>
+      </section>
+
+      <!-- Main Grid -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+
+        <!-- Create Room Card -->
+        <div class="card" style="grid-column: 1;">
+          <h2 class="section-title" style="font-family: 'Space Grotesk',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:20px;">Create a Room</h2>
+
+          <label for="grid-size-group">Grid Size (boxes)</label>
+          <div class="grid-selector" id="grid-size-group" role="group" aria-label="Grid size">
+            <button class="grid-btn" data-size="3" id="gs-3" aria-pressed="false">3 × 3</button>
+            <button class="grid-btn active" data-size="4" id="gs-4" aria-pressed="true">4 × 4</button>
+            <button class="grid-btn" data-size="5" id="gs-5" aria-pressed="false">5 × 5</button>
+            <button class="grid-btn" data-size="6" id="gs-6" aria-pressed="false">6 × 6</button>
+          </div>
+
+          <p class="text-sm text-muted mt-3" id="grid-desc">
+            4 × 4 grid · 16 boxes · ~5 min game
+          </p>
+
+          <button class="btn btn-primary btn-lg mt-4" id="create-btn" style="width:100%; justify-content:center;" aria-label="Create a new game room">
+            <span id="create-btn-icon">✦</span>
+            <span id="create-btn-text">Create Room</span>
+          </button>
+
+          <div class="divider" style="margin: 20px 0 16px;"></div>
+
+          <!-- How to Play -->
+          <details class="how-to">
+            <summary>How to Play <span class="chev">▾</span></summary>
+            <div class="how-to-body">
+              <div class="how-to-step">
+                <div class="step-num">1</div>
+                <p class="step-text"><strong>Create a room</strong> — choose your grid size and click Create Room.</p>
+              </div>
+              <div class="how-to-step">
+                <div class="step-num">2</div>
+                <p class="step-text"><strong>Share the link</strong> — copy and send your unique room URL to a friend.</p>
+              </div>
+              <div class="how-to-step">
+                <div class="step-num">3</div>
+                <p class="step-text"><strong>Take turns</strong> — draw one line per turn between two adjacent dots.</p>
+              </div>
+              <div class="how-to-step">
+                <div class="step-num">4</div>
+                <p class="step-text"><strong>Claim boxes</strong> — complete the 4th side of a box to score a point and go again.</p>
+              </div>
+              <div class="how-to-step">
+                <div class="step-num">5</div>
+                <p class="step-text"><strong>Win</strong> — the player with the most boxes when the board is full wins!</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Active Rooms -->
+        <div class="card" style="grid-column: 2;">
+          <div class="section-header">
+            <h2 class="section-title">Active Rooms</h2>
+            <div class="section-count" id="room-count">0</div>
+            <div style="flex:1;"></div>
+            <button class="btn btn-ghost btn-sm" id="refresh-btn" aria-label="Refresh room list">↺ Refresh</button>
+          </div>
+
+          <div id="room-list">
+            <div class="empty-state">
+              <div class="empty-icon">🎲</div>
+              No open rooms yet. Create one above!
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /grid -->
+
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="home.js"></script>
+</body>
+</html>
