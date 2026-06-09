@@ -142,6 +142,7 @@ const GomokuGame = (() => {
       document.getElementById('stone-preview')?.setAttribute('opacity','0');
       _turn = d.currentTurn;
       if (d.won) showToast(d.player === _player ? '🏆 You won!' : '😔 Opponent wins!');
-    }
+    },
+    setStarted() { _started = true; }
   };
 })();

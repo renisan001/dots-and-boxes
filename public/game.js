@@ -74,8 +74,10 @@ function setupSocket() {
     updateNames(playerNumber);
     updateScores(d.gameState.scores);
     shareBanner.classList.add('hidden');
+    waitOverlay.classList.add('hidden');
     loadGameModule(gameType, gridSize, d.gameState, d.currentTurn);
-    updateTurnBar(d.currentTurn, playerNumber, false);
+    activeModule?.setStarted?.();
+    updateTurnBar(d.currentTurn, playerNumber, true);
   });
 
   socket.on('game_start', d => {
@@ -85,6 +87,7 @@ function setupSocket() {
     nameP2El.textContent = 'Opponent';
     updateTurnBar(d.currentTurn, playerNumber, true);
     showToast('🎮 Game started! Good luck!');
+    activeModule?.setStarted?.();
   });
 
   socket.on('game_state_sync', d => {
@@ -97,6 +100,7 @@ function setupSocket() {
     if (gameStarted) { waitOverlay.classList.add('hidden'); shareBanner.classList.add('hidden'); }
     else if (playerNumber === 1) { shareBanner.classList.remove('hidden'); shareUrlEl.textContent = window.location.href; }
     loadGameModule(gameType, gridSize, d.gameState, d.currentTurn);
+    if (gameStarted) activeModule?.setStarted?.();
     updateTurnBar(d.currentTurn, playerNumber, gameStarted);
   });
 

@@ -100,6 +100,7 @@ const MemoryGame = (() => {
         flipCardEl(i, '', false);
       });
       _locked = false;
-    }
+    },
+    setStarted() { _started = true; }
   };
 })();
