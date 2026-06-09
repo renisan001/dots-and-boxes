@@ -1,123 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dots & Boxes Online — Play Instantly, No Sign-Up</title>
-  <meta name="description" content="Connect dots, close boxes, and outsmart your opponent in this classic real-time multiplayer strategy game. No sign-up required." />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Game Lobby — Dots & Boxes · Gomoku · Memory</title>
+  <meta name="description" content="Play classic multiplayer games online. Dots & Boxes, Gomoku, and Memory Card Game. No sign-up required."/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <div class="bg-mesh"></div>
+<div class="bg-mesh"></div>
 
-  <nav class="navbar">
-    <div class="container">
-      <div class="logo-mark">⬛</div>
-      <span class="logo-text">Dots &amp; Boxes</span>
-      <div class="nav-spacer"></div>
-      <span id="online-count" class="text-sm text-muted"></span>
-    </div>
-  </nav>
-
-  <div class="page">
-    <div class="container">
-
-      <!-- Hero -->
-      <section class="hero">
-        <div class="hero-tag">🎮 No Sign-Up · Instant Play · Real-Time</div>
-        <h1 class="hero-title">
-          Connect Dots.<br/>
-          <span>Claim Boxes.</span> Win.
-        </h1>
-        <p class="hero-sub">
-          The classic Dots &amp; Boxes strategy game, now online.
-          Create a room, share the link, and play instantly.
-        </p>
-
-        <!-- Animated dot grid preview -->
-        <div class="dot-grid" id="dot-grid" style="grid-template-columns: repeat(5,1fr); width:fit-content;"></div>
-      </section>
-
-      <!-- Main Grid -->
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
-
-        <!-- Create Room Card -->
-        <div class="card" style="grid-column: 1;">
-          <h2 class="section-title" style="font-family: 'Space Grotesk',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:20px;">Create a Room</h2>
-
-          <label for="grid-size-group">Grid Size (boxes)</label>
-          <div class="grid-selector" id="grid-size-group" role="group" aria-label="Grid size">
-            <button class="grid-btn" data-size="3" id="gs-3" aria-pressed="false">3 × 3</button>
-            <button class="grid-btn active" data-size="4" id="gs-4" aria-pressed="true">4 × 4</button>
-            <button class="grid-btn" data-size="5" id="gs-5" aria-pressed="false">5 × 5</button>
-            <button class="grid-btn" data-size="6" id="gs-6" aria-pressed="false">6 × 6</button>
-          </div>
-
-          <p class="text-sm text-muted mt-3" id="grid-desc">
-            4 × 4 grid · 16 boxes · ~5 min game
-          </p>
-
-          <button class="btn btn-primary btn-lg mt-4" id="create-btn" style="width:100%; justify-content:center;" aria-label="Create a new game room">
-            <span id="create-btn-icon">✦</span>
-            <span id="create-btn-text">Create Room</span>
-          </button>
-
-          <div class="divider" style="margin: 20px 0 16px;"></div>
-
-          <!-- How to Play -->
-          <details class="how-to">
-            <summary>How to Play <span class="chev">▾</span></summary>
-            <div class="how-to-body">
-              <div class="how-to-step">
-                <div class="step-num">1</div>
-                <p class="step-text"><strong>Create a room</strong> — choose your grid size and click Create Room.</p>
-              </div>
-              <div class="how-to-step">
-                <div class="step-num">2</div>
-                <p class="step-text"><strong>Share the link</strong> — copy and send your unique room URL to a friend.</p>
-              </div>
-              <div class="how-to-step">
-                <div class="step-num">3</div>
-                <p class="step-text"><strong>Take turns</strong> — draw one line per turn between two adjacent dots.</p>
-              </div>
-              <div class="how-to-step">
-                <div class="step-num">4</div>
-                <p class="step-text"><strong>Claim boxes</strong> — complete the 4th side of a box to score a point and go again.</p>
-              </div>
-              <div class="how-to-step">
-                <div class="step-num">5</div>
-                <p class="step-text"><strong>Win</strong> — the player with the most boxes when the board is full wins!</p>
-              </div>
-            </div>
-          </details>
-        </div>
-
-        <!-- Active Rooms -->
-        <div class="card" style="grid-column: 2;">
-          <div class="section-header">
-            <h2 class="section-title">Active Rooms</h2>
-            <div class="section-count" id="room-count">0</div>
-            <div style="flex:1;"></div>
-            <button class="btn btn-ghost btn-sm" id="refresh-btn" aria-label="Refresh room list">↺ Refresh</button>
-          </div>
-
-          <div id="room-list">
-            <div class="empty-state">
-              <div class="empty-icon">🎲</div>
-              No open rooms yet. Create one above!
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /grid -->
-
-    </div>
+<nav class="navbar">
+  <div class="container">
+    <div class="logo-mark">🎮</div>
+    <span class="logo-text">Game Lobby</span>
+    <div class="nav-spacer"></div>
+    <button class="nav-profile" id="profile-btn" aria-label="View your profile">
+      <div id="nav-avatar"></div>
+      <span id="nav-name"></span>
+      <span style="color:var(--text3);font-size:0.7rem;">▾</span>
+    </button>
   </div>
+</nav>
 
-  <!-- Toast -->
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="page">
+  <div class="container">
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="home.js"></script>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-tag">🎮 No Sign-Up · Instant Play · Real-Time</div>
+      <h1 class="hero-title">Pick a Game.<br/><span>Play Instantly.</span></h1>
+      <p class="hero-sub">Choose a game, set your options, share the link — your friend joins and you play. That's it.</p>
+    </section>
+
+    <!-- Game Picker -->
+    <div class="game-cards">
+      <div class="game-card dots" data-game="dots" role="button" tabindex="0" aria-pressed="false">
+        <span class="game-card-icon">⬛</span>
+        <div class="game-card-title">Dots &amp; Boxes</div>
+        <div class="game-card-desc">Connect dots, close boxes, outsmart your opponent on a custom grid.</div>
+      </div>
+      <div class="game-card gomoku" data-game="gomoku" role="button" tabindex="0" aria-pressed="false">
+        <span class="game-card-icon">🔵</span>
+        <div class="game-card-title">Gomoku</div>
+        <div class="game-card-desc">Place stones on a 15×15 board. First to get 5 in a row wins.</div>
+        <span class="game-card-badge" style="background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);">New</span>
+      </div>
+      <div class="game-card memory" data-game="memory" role="button" tabindex="0" aria-pressed="false">
+        <span class="game-card-icon">🃏</span>
+        <div class="game-card-title">Memory</div>
+        <div class="game-card-desc">Flip cards, find matching pairs. The player with most pairs wins.</div>
+        <span class="game-card-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">New</span>
+      </div>
+    </div>
+
+    <!-- Config + Rooms side by side -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;" id="main-grid">
+
+      <!-- Config Panel -->
+      <div class="config-panel" id="config-panel">
+        <h2 class="section-title" id="config-title" style="margin-bottom:18px;">Select a Game Above</h2>
+        <div id="config-body" style="color:var(--text2);font-size:0.9rem;">Choose one of the three games to get started.</div>
+      </div>
+
+      <!-- Active Rooms -->
+      <div class="card">
+        <div class="section-header">
+          <h2 class="section-title">Active Rooms</h2>
+          <div class="section-count" id="room-count">0</div>
+          <div style="flex:1;"></div>
+          <button class="btn btn-ghost btn-sm" id="refresh-btn">↺</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;" id="filter-tabs">
+          <button class="btn btn-ghost btn-sm active" data-filter="all" style="font-size:0.75rem;padding:5px 12px;">All</button>
+          <button class="btn btn-ghost btn-sm" data-filter="dots" style="font-size:0.75rem;padding:5px 12px;">⬛ Dots</button>
+          <button class="btn btn-ghost btn-sm" data-filter="gomoku" style="font-size:0.75rem;padding:5px 12px;">🔵 Gomoku</button>
+          <button class="btn btn-ghost btn-sm" data-filter="memory" style="font-size:0.75rem;padding:5px 12px;">🃏 Memory</button>
+        </div>
+        <div id="room-list">
+          <div class="empty-state"><div class="empty-icon">🎲</div>No open rooms yet.</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="profile.js"></script>
+<script src="home.js"></script>
 </body>
 </html>

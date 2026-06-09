@@ -1,118 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dots & Boxes — Game Room</title>
-  <meta name="description" content="Play Dots & Boxes online with a friend. Draw lines, claim boxes, outsmart your opponent." />
-  <link rel="stylesheet" href="/style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Game Room</title>
+  <link rel="stylesheet" href="/style.css"/>
 </head>
 <body>
-  <div class="bg-mesh"></div>
+<div class="bg-mesh"></div>
 
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="logo-mark" style="text-decoration:none;">⬛</a>
-      <a href="/" class="logo-text" style="text-decoration:none;">Dots &amp; Boxes</a>
-      <div class="nav-spacer"></div>
-      <span id="room-label" class="text-sm text-muted">Room —</span>
-    </div>
-  </nav>
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="logo-mark" style="text-decoration:none;">🎮</a>
+    <a href="/" class="logo-text" style="text-decoration:none;">Game Lobby</a>
+    <div class="nav-spacer"></div>
+    <span id="room-label" class="text-sm text-muted"></span>
+    <button class="nav-profile" id="profile-btn" aria-label="View profile" style="margin-left:12px;">
+      <div id="nav-avatar"></div>
+      <span id="nav-name"></span>
+      <span style="color:var(--text3);font-size:0.7rem;">▾</span>
+    </button>
+  </div>
+</nav>
 
-  <div class="page">
-    <div class="container">
-      <div class="game-page">
+<div class="page">
+  <div class="container">
+    <div class="game-page">
 
-        <!-- Error state (room not found etc.) -->
-        <div id="error-state" class="hidden" style="text-align:center; padding:80px 0;">
-          <div style="font-size:3rem; margin-bottom:20px;">😕</div>
-          <h2 style="font-family:'Space Grotesk',sans-serif; font-size:1.6rem; margin-bottom:8px;">Room Not Found</h2>
-          <p class="text-muted" style="margin-bottom:28px;" id="error-msg">This room doesn't exist or has already ended.</p>
-          <a href="/" class="btn btn-primary">Back to Home</a>
+      <!-- Error -->
+      <div id="error-state" class="hidden" style="text-align:center;padding:80px 0;">
+        <div style="font-size:3rem;margin-bottom:16px;">😕</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;margin-bottom:8px;">Room Not Found</h2>
+        <p class="text-muted" id="error-msg" style="margin-bottom:24px;">This room doesn't exist or has already ended.</p>
+        <a href="/" class="btn btn-primary">Back to Lobby</a>
+      </div>
+
+      <!-- Game Area -->
+      <div id="game-area">
+
+        <div class="disconnect-bar" id="disconnect-bar">⚠️ Opponent disconnected. Waiting for them to reconnect…</div>
+
+        <!-- Players Bar -->
+        <div class="players-bar">
+          <div class="player-panel p1 active" id="panel-p1">
+            <div class="turn-dot"></div>
+            <div class="player-label">Player 1</div>
+            <div class="player-name" id="name-p1">You</div>
+            <div class="player-score" id="score-p1">0</div>
+            <div class="score-label" id="score-label-p1">pts</div>
+          </div>
+          <div class="player-panel p2" id="panel-p2">
+            <div class="turn-dot"></div>
+            <div class="player-label">Player 2</div>
+            <div class="player-name" id="name-p2">Waiting…</div>
+            <div class="player-score" id="score-p2">0</div>
+            <div class="score-label" id="score-label-p2">pts</div>
+          </div>
         </div>
 
-        <!-- Game area -->
-        <div id="game-area">
-
-          <!-- Disconnect notice -->
-          <div class="disconnect-bar" id="disconnect-bar">
-            ⚠️ Your opponent disconnected. Waiting for them to reconnect…
+        <!-- Share Banner -->
+        <div class="share-banner hidden" id="share-banner">
+          <span class="share-icon">🔗</span>
+          <div class="share-text">
+            <strong>Share this link with your friend to start</strong>
+            <span class="share-url" id="share-url"></span>
           </div>
+          <button class="btn btn-ghost btn-sm" id="copy-btn">Copy Link</button>
+        </div>
 
-          <!-- Players bar -->
-          <div class="players-bar">
-            <div class="player-panel p1 active" id="panel-p1">
-              <div class="turn-dot"></div>
-              <div class="player-label">Player 1</div>
-              <div class="player-name" id="name-p1">You</div>
-              <div class="player-score" id="score-p1">0</div>
-              <div class="score-label">boxes</div>
-            </div>
-            <div class="player-panel p2" id="panel-p2">
-              <div class="turn-dot"></div>
-              <div class="player-label">Player 2</div>
-              <div class="player-name" id="name-p2">Waiting…</div>
-              <div class="player-score" id="score-p2">0</div>
-              <div class="score-label">boxes</div>
-            </div>
+        <!-- Turn Bar -->
+        <div class="turn-bar" id="turn-bar">Waiting for opponent…</div>
+
+        <!-- Board Container — filled by game module -->
+        <div class="board-wrapper mt-4" id="board-wrapper">
+          <div class="waiting-overlay" id="waiting-overlay">
+            <div class="spinner"></div>
+            <p class="waiting-text">Waiting for Player 2…</p>
           </div>
-
-          <!-- Share banner (P1 only) -->
-          <div class="share-banner" id="share-banner">
-            <span class="share-icon">🔗</span>
-            <div class="share-text">
-              <strong>Share this link with your friend to start the game</strong>
-              <span class="share-url" id="share-url"></span>
-            </div>
-            <button class="btn btn-ghost btn-sm" id="copy-btn" aria-label="Copy room link">Copy Link</button>
-          </div>
-
-          <!-- Turn bar -->
-          <div class="turn-bar" id="turn-bar">Waiting for opponent…</div>
-
-          <!-- Board -->
-          <div class="board-wrapper mt-4">
-            <div class="waiting-overlay" id="waiting-overlay">
-              <div class="spinner"></div>
-              <p class="waiting-text">Waiting for Player 2…</p>
-            </div>
-            <svg id="board-svg" xmlns="http://www.w3.org/2000/svg" aria-label="Dots and Boxes game board"></svg>
-          </div>
-
-        </div><!-- /game-area -->
+          <div id="board-container"></div>
+        </div>
 
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Game Over Modal -->
-  <div class="modal-backdrop hidden" id="game-over-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal">
-      <div class="modal-emoji" id="modal-emoji">🏆</div>
-      <h2 class="modal-title" id="modal-title">Player 1 Wins!</h2>
-      <p class="modal-sub" id="modal-sub">Congratulations on a great game.</p>
-      <div class="modal-scores">
-        <div class="modal-score-item">
-          <div class="modal-score-num" id="modal-s1" style="color:var(--p1);">0</div>
-          <div class="modal-score-lbl">Player 1</div>
-        </div>
-        <div style="display:flex;align-items:center;padding:0 8px;color:var(--text3);font-size:1.5rem;">vs</div>
-        <div class="modal-score-item">
-          <div class="modal-score-num" id="modal-s2" style="color:var(--p2);">0</div>
-          <div class="modal-score-lbl">Player 2</div>
-        </div>
+<!-- Game Over Modal -->
+<div class="modal-backdrop hidden" id="game-over-modal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-emoji" id="modal-emoji">🏆</div>
+    <h2 class="modal-title" id="modal-title">You Win!</h2>
+    <p class="modal-sub" id="modal-sub">Well played!</p>
+    <div class="modal-scores">
+      <div class="modal-score-item">
+        <div class="modal-score-num" id="modal-s1" style="color:var(--p1);">0</div>
+        <div class="modal-score-lbl">Player 1</div>
       </div>
-      <div class="modal-actions">
-        <a href="/" class="btn btn-ghost">🏠 Home</a>
-        <button class="btn btn-primary" id="play-again-btn">↺ Play Again</button>
+      <div style="display:flex;align-items:center;padding:0 12px;color:var(--text3);font-size:1.3rem;">vs</div>
+      <div class="modal-score-item">
+        <div class="modal-score-num" id="modal-s2" style="color:var(--p2);">0</div>
+        <div class="modal-score-lbl">Player 2</div>
       </div>
     </div>
+    <div class="modal-actions">
+      <a href="/" class="btn btn-ghost">🏠 Lobby</a>
+      <button class="btn btn-primary" id="play-again-btn">↺ Play Again</button>
+    </div>
   </div>
+</div>
 
-  <!-- Toast -->
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/game.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/profile.js"></script>
+<script src="/dots.js"></script>
+<script src="/gomoku.js"></script>
+<script src="/memory.js"></script>
+<script src="/game.js"></script>
 </body>
 </html>
