@@ -98,7 +98,7 @@ io.on('connection', (socket) => {
     else if (gameType === 'memory') gameState = createMemoryState(gridSize);
     else gameState = createDotsState(gridSize);
 
-    rooms.set(roomId, { id: roomId, gameType, gridSize, players: [{ id: socket.id, number: 1 }], gameState, currentTurn: 1, status: 'waiting', createdAt: Date.now() });
+    rooms.set(roomId, { id: roomId, gameType, gridSize, players: [{ id: socket.id, number: 1 }], gameState, currentTurn: 1, status: 'waiting', createdAt: Date.now(), messages: [] });
     socket.join(roomId); socket.data.roomId = roomId; socket.data.playerNumber = 1;
     socket.emit('room_created', { roomId, gameType, gridSize, playerNumber: 1 });
     broadcastRoomList();
@@ -110,7 +110,7 @@ io.on('connection', (socket) => {
     if (room.players.length >= 2) { socket.emit('error_msg', { message: 'Room is full.' }); return; }
     room.players.push({ id: socket.id, number: 2 }); room.status = 'playing';
     socket.join(roomId); socket.data.roomId = roomId; socket.data.playerNumber = 2;
-    socket.emit('joined_room', { roomId, gameType: room.gameType, gridSize: room.gridSize, playerNumber: 2, gameState: room.gameState, currentTurn: room.currentTurn });
+    socket.emit('joined_room', { roomId, gameType: room.gameType, gridSize: room.gridSize, playerNumber: 2, gameState: room.gameState, currentTurn: room.currentTurn, messages: room.messages });
     io.to(roomId).emit('game_start', { gameType: room.gameType, gridSize: room.gridSize, currentTurn: room.currentTurn });
     broadcastRoomList();
   });
@@ -121,7 +121,7 @@ io.on('connection', (socket) => {
     const p = room.players.find(x => x.number === playerNumber);
     if (p) p.id = socket.id; else room.players.push({ id: socket.id, number: playerNumber });
     socket.join(roomId); socket.data.roomId = roomId; socket.data.playerNumber = playerNumber;
-    socket.emit('game_state_sync', { roomId, gameType: room.gameType, gridSize: room.gridSize, playerNumber, gameState: room.gameState, currentTurn: room.currentTurn, status: room.status });
+    socket.emit('game_state_sync', { roomId, gameType: room.gameType, gridSize: room.gridSize, playerNumber, gameState: room.gameState, currentTurn: room.currentTurn, status: room.status, messages: room.messages });
   });
 
   // ── Dots & Boxes ──
@@ -193,6 +193,28 @@ io.on('connection', (socket) => {
         }, 1200);
       }
     }
+  });
+
+  // ── Chat & Reactions ──
+  socket.on('send_reaction', ({ emoji }) => {
+    const { roomId, playerNumber } = socket.data;
+    if (!rooms.has(roomId)) return;
+    socket.to(roomId).emit('reaction_received', { emoji, player: playerNumber });
+  });
+
+  socket.on('send_message', ({ text, name }) => {
+    const { roomId, playerNumber } = socket.data;
+    const room = rooms.get(roomId);
+    if (!room) return;
+    const msg = { text: String(text).slice(0, 200), player: playerNumber, name: String(name).slice(0, 30), ts: Date.now() };
+    room.messages = [...room.messages, msg].slice(-50);
+    io.to(roomId).emit('message_received', msg);
+  });
+
+  socket.on('typing', ({ isTyping }) => {
+    const { roomId, playerNumber } = socket.data;
+    if (!rooms.has(roomId)) return;
+    socket.to(roomId).emit('opponent_typing', { isTyping, player: playerNumber });
   });
 
   socket.on('disconnect', () => {

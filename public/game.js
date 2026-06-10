@@ -78,6 +78,8 @@ function setupSocket() {
     loadGameModule(gameType, gridSize, d.gameState, d.currentTurn);
     activeModule?.setStarted?.();
     updateTurnBar(d.currentTurn, playerNumber, true);
+    ChatSystem.init(socket, playerNumber, () => getProfile().name);
+    ChatSystem.loadHistory(d.messages || []);
   });
 
   socket.on('game_start', d => {
@@ -88,6 +90,7 @@ function setupSocket() {
     updateTurnBar(d.currentTurn, playerNumber, true);
     showToast('🎮 Game started! Good luck!');
     activeModule?.setStarted?.();
+    ChatSystem.init(socket, playerNumber, () => getProfile().name);
   });
 
   socket.on('game_state_sync', d => {
@@ -100,7 +103,11 @@ function setupSocket() {
     if (gameStarted) { waitOverlay.classList.add('hidden'); shareBanner.classList.add('hidden'); }
     else if (playerNumber === 1) { shareBanner.classList.remove('hidden'); shareUrlEl.textContent = window.location.href; }
     loadGameModule(gameType, gridSize, d.gameState, d.currentTurn);
-    if (gameStarted) activeModule?.setStarted?.();
+    if (gameStarted) {
+      activeModule?.setStarted?.();
+      ChatSystem.init(socket, playerNumber, () => getProfile().name);
+      ChatSystem.loadHistory(d.messages || []);
+    }
     updateTurnBar(d.currentTurn, playerNumber, gameStarted);
   });
 
@@ -114,6 +121,10 @@ function setupSocket() {
   socket.on('game_over',        d => handleGameOver(d));
   socket.on('opponent_disconnected', () => { disconnBar.classList.add('show'); });
   socket.on('error_msg', ({ message }) => showToast('⚠️ ' + message));
+  // Chat & Reaction events
+  socket.on('reaction_received', d => ChatSystem.onReactionReceived(d));
+  socket.on('message_received',  d => ChatSystem.onMessageReceived(d));
+  socket.on('opponent_typing',   d => ChatSystem.onOpponentTyping(d));
 }
 
 function loadGameModule(gt, gs, gameState, currentTurn) {
