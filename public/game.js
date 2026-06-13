@@ -1,6 +1,7 @@
 /* game.js — Universal dispatcher: connects socket, determines game type, delegates to game module */
 
 let socket, roomId, playerNumber, gameType, gridSize;
+let vsAI = false;
 let gameStarted = false;
 let activeModule = null;
 
@@ -20,7 +21,9 @@ const gameOverMod = document.getElementById('game-over-modal');
 const disconnBar  = document.getElementById('disconnect-bar');
 const roomLabel   = document.getElementById('room-label');
 const toast       = document.getElementById('toast');
-const playAgainBtn= document.getElementById('play-again-btn');
+const rematchBtn  = document.getElementById('rematch-btn');
+const lobbyBtn    = document.getElementById('lobby-btn');
+const rematchStatus = document.getElementById('rematch-status');
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 function showToast(msg, dur = 3000) {
@@ -41,13 +44,18 @@ function updateTurnBar(currentTurn, pNum, started) {
   }
   const myTurn = currentTurn === pNum;
   turnBar.className = `turn-bar ${currentTurn === 1 ? 'p1-turn' : 'p2-turn'}`;
-  turnBar.innerHTML = myTurn ? '<strong>Your turn!</strong>' : `<strong>Opponent's turn</strong> — waiting…`;
+  if (vsAI && currentTurn === 2) {
+    turnBar.innerHTML = '<strong>🤖 AI is thinking…</strong>';
+  } else {
+    turnBar.innerHTML = myTurn ? '<strong>Your turn!</strong>' : `<strong>Opponent's turn</strong> — waiting…`;
+  }
   panelP1.classList.toggle('active', currentTurn === 1);
   panelP2.classList.toggle('active', currentTurn === 2);
 }
 function updateNames(pNum) {
-  nameP1El.textContent = pNum === 1 ? getProfile().name.split('#')[0] : 'Opponent';
-  nameP2El.textContent = pNum === 2 ? getProfile().name.split('#')[0] : (gameStarted ? 'Opponent' : 'Waiting…');
+  const p2label = vsAI ? '🤖 AI' : 'Opponent';
+  nameP1El.textContent = pNum === 1 ? getProfile().name.split('#')[0] : p2label;
+  nameP2El.textContent = pNum === 2 ? getProfile().name.split('#')[0] : (vsAI ? '🤖 AI' : (gameStarted ? 'Opponent' : 'Waiting…'));
 }
 function updateScores(scores) {
   scoreP1El.textContent = scores[1]; scoreP2El.textContent = scores[2];
@@ -80,7 +88,7 @@ function setupSocket() {
 
   socket.on('joined_room', d => {
     playerNumber = d.playerNumber; gameType = d.gameType; gridSize = d.gridSize;
-    sessionStorage.setItem(`gp-room-${roomId}`, JSON.stringify({ playerNumber, gameType, gridSize }));
+    sessionStorage.setItem(`gp-room-${roomId}`, JSON.stringify({ playerNumber, gameType, gridSize, vsAI }));
     roomLabel.textContent = `Room ${roomId}`;
     updateNames(playerNumber);
     updateScores(d.gameState.scores);
@@ -105,14 +113,14 @@ function setupSocket() {
   });
 
   socket.on('game_state_sync', d => {
-    playerNumber = d.playerNumber; gameType = d.gameType; gridSize = d.gridSize;
-    sessionStorage.setItem(`gp-room-${roomId}`, JSON.stringify({ playerNumber, gameType, gridSize }));
+    playerNumber = d.playerNumber; gameType = d.gameType; gridSize = d.gridSize; vsAI = !!d.vsAI;
+    sessionStorage.setItem(`gp-room-${roomId}`, JSON.stringify({ playerNumber, gameType, gridSize, vsAI }));
     gameStarted = d.status === 'playing';
     roomLabel.textContent = `Room ${roomId}`;
     updateNames(playerNumber);
     updateScores(d.gameState.scores);
     if (gameStarted) { waitOverlay.classList.add('hidden'); shareBanner.classList.add('hidden'); }
-    else if (playerNumber === 1) { shareBanner.classList.remove('hidden'); shareUrlEl.textContent = window.location.href; }
+    else if (playerNumber === 1 && !vsAI) { shareBanner.classList.remove('hidden'); shareUrlEl.textContent = window.location.href; }
     loadGameModule(gameType, gridSize, d.gameState, d.currentTurn);
     if (gameStarted) {
       activeModule?.setStarted?.();
@@ -134,6 +142,26 @@ function setupSocket() {
   socket.on('game_over',        d => handleGameOver(d));
   socket.on('opponent_disconnected', () => { disconnBar.classList.add('show'); });
   socket.on('error_msg', ({ message }) => showToast('⚠️ ' + message));
+
+  // ── Rematch events ──
+  socket.on('rematch_requested', () => {
+    // Opponent wants a rematch — show status in our modal
+    if (rematchStatus) rematchStatus.style.display = 'none';
+    if (rematchBtn) { rematchBtn.textContent = '🔄 Accept Rematch'; rematchBtn.disabled = false; }
+  });
+
+  socket.on('game_reset', d => {
+    gameStarted = true;
+    gameOverMod.classList.add('hidden');
+    if (rematchStatus) rematchStatus.style.display = 'none';
+    if (rematchBtn) { rematchBtn.textContent = '🔄 Rematch'; rematchBtn.disabled = false; }
+    updateScores({ 1: 0, 2: 0 });
+    updateTurnBar(d.currentTurn, playerNumber, true);
+    loadGameModule(d.gameType, d.gridSize, d.gameState, d.currentTurn);
+    activeModule?.setStarted?.();
+    ChatSystem.init(socket, playerNumber, () => getProfile().name);
+    showToast('🔄 Rematch! Good luck!', 2500);
+  });
 
   // Connection health
   socket.on('disconnect', (reason) => {
@@ -178,8 +206,8 @@ function init() {
   const saved = sessionStorage.getItem(`gp-room-${roomId}`);
   if (saved) {
     const s = JSON.parse(saved);
-    playerNumber = s.playerNumber; gameType = s.gameType; gridSize = s.gridSize;
-    if (playerNumber === 1) { shareBanner.classList.remove('hidden'); shareUrlEl.textContent = window.location.href; }
+    playerNumber = s.playerNumber; gameType = s.gameType; gridSize = s.gridSize; vsAI = !!s.vsAI;
+    if (playerNumber === 1 && !vsAI) { shareBanner.classList.remove('hidden'); shareUrlEl.textContent = window.location.href; }
     socket.emit('rejoin_room', { roomId, playerNumber });
   } else {
     socket.emit('join_room', { roomId });
@@ -192,9 +220,20 @@ function init() {
     });
   });
 
-  playAgainBtn.addEventListener('click', () => {
+  // Lobby button — go back to lobby and clear saved room
+  if (lobbyBtn) lobbyBtn.addEventListener('click', () => {
     sessionStorage.removeItem(`gp-room-${roomId}`);
     window.location.href = '/';
+  });
+
+  // Rematch button
+  if (rematchBtn) rematchBtn.addEventListener('click', () => {
+    socket.emit('request_rematch');
+    if (!vsAI) {
+      rematchBtn.textContent = '⏳ Waiting…';
+      rematchBtn.disabled = true;
+      if (rematchStatus) rematchStatus.style.display = 'block';
+    }
   });
 }
 

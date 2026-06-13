@@ -84,6 +84,10 @@ function renderConfigPanel() {
 
   configBody.innerHTML = `
     ${gridHTML}
+    <label style="display:flex;align-items:center;gap:10px;margin:14px 0 4px;cursor:pointer;font-size:0.88rem;color:var(--text2);">
+      <input type="checkbox" id="vs-ai-toggle" style="width:16px;height:16px;accent-color:var(--a1);cursor:pointer;">
+      <span>🤖 Play vs AI <span style="font-size:0.78rem;color:var(--text3);">(solo mode)</span></span>
+    </label>
     <button class="btn btn-primary btn-lg mt-4" id="create-btn" style="width:100%;justify-content:center;">
       <span id="create-icon">✦</span> <span id="create-text">Create Room</span>
     </button>
@@ -105,15 +109,16 @@ function renderConfigPanel() {
 function createRoom() {
   if (creating || !selectedGame) return;
   creating = true;
-  document.getElementById('create-text').textContent = 'Creating…';
-  document.getElementById('create-icon').textContent = '⏳';
+  const vsAI = document.getElementById('vs-ai-toggle')?.checked || false;
+  document.getElementById('create-text').textContent = vsAI ? 'Launching…' : 'Creating…';
+  document.getElementById('create-icon').textContent = vsAI ? '🤖' : '⏳';
   document.getElementById('create-btn').disabled = true;
-  socket.emit('create_room', { gameType: selectedGame, gridSize: selectedGrid });
+  socket.emit('create_room', { gameType: selectedGame, gridSize: selectedGrid, vsAI });
 }
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
-socket.on('room_created', ({ roomId, gameType, gridSize, playerNumber }) => {
-  sessionStorage.setItem(`gp-room-${roomId}`, JSON.stringify({ playerNumber, gameType, gridSize }));
+socket.on('room_created', ({ roomId, gameType, gridSize, playerNumber, vsAI }) => {
+  sessionStorage.setItem(`gp-room-${roomId}`, JSON.stringify({ playerNumber, gameType, gridSize, vsAI: !!vsAI }));
   window.location.href = `/game/${roomId}`;
 });
 
