@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Game Lobby — Dots & Boxes · Gomoku · Memory</title>
-  <meta name="description" content="Play classic multiplayer games online. Dots & Boxes, Gomoku, and Memory Card Game. No sign-up required."/>
+  <title>Game Lobby — Dots &amp; Boxes · Gomoku · Memory · Ping Pong</title>
+  <meta name="description" content="Play classic multiplayer games online. Dots &amp; Boxes, Gomoku, Memory, and Ping Pong. No sign-up required."/>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
@@ -52,6 +52,12 @@
         <div class="game-card-desc">Flip cards, find matching pairs. The player with most pairs wins.</div>
         <span class="game-card-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">New</span>
       </div>
+      <div class="game-card pong" data-game="pong" role="button" tabindex="0" aria-pressed="false">
+        <span class="game-card-icon">🏓</span>
+        <div class="game-card-title">Ping Pong</div>
+        <div class="game-card-desc">Real-time vertical pong. Slide your paddle, smash the ball, first to 7 wins!</div>
+        <span class="game-card-badge" style="background:rgba(236,72,153,0.15);color:#ec4899;border:1px solid rgba(236,72,153,0.3);">Hot</span>
+      </div>
     </div>
 
     <!-- Config + Rooms side by side -->
@@ -76,6 +82,7 @@
           <button class="btn btn-ghost btn-sm" data-filter="dots" style="font-size:0.75rem;padding:5px 12px;">⬛ Dots</button>
           <button class="btn btn-ghost btn-sm" data-filter="gomoku" style="font-size:0.75rem;padding:5px 12px;">🔵 Gomoku</button>
           <button class="btn btn-ghost btn-sm" data-filter="memory" style="font-size:0.75rem;padding:5px 12px;">🃏 Memory</button>
+          <button class="btn btn-ghost btn-sm" data-filter="pong" style="font-size:0.75rem;padding:5px 12px;">🏓 Pong</button>
         </div>
         <div id="room-list">
           <div class="empty-state"><div class="empty-icon">🎲</div>No open rooms yet.</div>

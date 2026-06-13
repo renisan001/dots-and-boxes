@@ -12,6 +12,7 @@
   --text: #f1f5f9; --text2: #94a3b8; --text3: #475569;
   --r-sm:8px; --r-md:14px; --r-lg:22px; --r-xl:32px;
   --ease: cubic-bezier(0.4,0,0.2,1); --t: 0.2s var(--ease);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ─── Reset ─── */
@@ -28,7 +29,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* ─── Layout ─── */
 .page{position:relative;z-index:1;}
-.container{max-width:1040px;margin:0 auto;padding:0 24px;}
+.container{max-width:1040px;margin:0 auto;padding:0 20px;}
 
 /* ─── Navbar ─── */
 .navbar{padding:16px 0;border-bottom:1px solid var(--border);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;background:rgba(8,12,20,0.75);}
@@ -44,13 +45,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 #nav-name{font-size:0.8rem;font-weight:600;color:var(--text2);}
 
 /* ─── Buttons ─── */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--r-md);border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:600;transition:all var(--t);text-decoration:none;white-space:nowrap;position:relative;overflow:hidden;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:var(--r-md);border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:600;transition:all var(--t);text-decoration:none;white-space:nowrap;position:relative;overflow:hidden;min-height:44px;}
 .btn:active{transform:scale(0.97);}
 .btn-primary{background:var(--grad);color:#fff;box-shadow:0 4px 24px rgba(99,102,241,0.3);}
 .btn-primary:hover{box-shadow:0 6px 32px rgba(99,102,241,0.45);transform:translateY(-1px);}
 .btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border);}
 .btn-ghost:hover{border-color:var(--border-b);color:var(--text);}
-.btn-sm{padding:7px 16px;font-size:0.8rem;}
+.btn-sm{padding:8px 16px;font-size:0.8rem;min-height:38px;}
 .btn-lg{padding:14px 32px;font-size:1rem;}
 
 /* ─── Cards ─── */
@@ -58,22 +59,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .card:hover{border-color:var(--border-b);background:var(--card-hover);}
 
 /* ─── Game Picker Cards ─── */
-.game-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0;}
-.game-card{position:relative;border-radius:var(--r-lg);border:2px solid var(--border);background:var(--card);padding:28px 20px;cursor:pointer;transition:all 0.25s var(--ease);text-align:center;overflow:hidden;}
+.game-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:28px 0;}
+.game-card{position:relative;border-radius:var(--r-lg);border:2px solid var(--border);background:var(--card);padding:24px 16px;cursor:pointer;transition:all 0.25s var(--ease);text-align:center;overflow:hidden;min-height:44px;}
 .game-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.25s;background:var(--gc-grad,var(--grad));}
 .game-card:hover{border-color:var(--gc-color,var(--a1));transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.3);}
 .game-card:hover::before{opacity:0.06;}
 .game-card.active{border-color:var(--gc-color,var(--a1));box-shadow:0 0 0 1px var(--gc-color,var(--a1)),0 12px 40px rgba(0,0,0,0.3);}
 .game-card.active::before{opacity:0.1;}
-.game-card-icon{font-size:2.8rem;margin-bottom:14px;display:block;}
-.game-card-title{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px;}
-.game-card-desc{font-size:0.78rem;color:var(--text2);line-height:1.5;}
-.game-card-badge{position:absolute;top:12px;right:12px;padding:2px 8px;border-radius:999px;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
+.game-card-icon{font-size:2.4rem;margin-bottom:12px;display:block;}
+.game-card-title{font-family:'Space Grotesk',sans-serif;font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:5px;}
+.game-card-desc{font-size:0.72rem;color:var(--text2);line-height:1.5;}
+.game-card-badge{position:absolute;top:10px;right:10px;padding:2px 7px;border-radius:999px;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
 
 /* Individual game card themes */
 .game-card.dots{--gc-color:#6366f1;--gc-grad:linear-gradient(135deg,#6366f1,#06b6d4);}
 .game-card.gomoku{--gc-color:#22c55e;--gc-grad:linear-gradient(135deg,#22c55e,#06b6d4);}
 .game-card.memory{--gc-color:#f59e0b;--gc-grad:linear-gradient(135deg,#f59e0b,#f97316);}
+.game-card.pong{--gc-color:#ec4899;--gc-grad:linear-gradient(135deg,#ec4899,#f97316);}
 
 /* ─── Config Panel ─── */
 .config-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;margin-bottom:24px;animation:slide-down 0.2s var(--ease);}
@@ -214,17 +216,40 @@ label{font-size:0.78rem;color:var(--text2);font-weight:600;text-transform:upperc
 .mt-2{margin-top:8px;} .mt-3{margin-top:12px;} .mt-4{margin-top:16px;} .mt-6{margin-top:24px;}
 .text-sm{font-size:0.875rem;} .text-muted{color:var(--text2);}
 
+/* ─── Pong Canvas ─── */
+#pong-canvas { display: block; margin: 0 auto; touch-action: none; border-radius: 20px; }
+
 /* ─── Responsive ─── */
+@media(max-width:900px){
+  .game-cards{grid-template-columns:repeat(2,1fr);}
+}
 @media(max-width:700px){
-  .game-cards{grid-template-columns:1fr;}
-  .hero{padding:36px 0 24px;}
-  .card{padding:20px;}
+  .game-cards{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .hero{padding:28px 0 18px;}
+  .hero-title{font-size:clamp(1.7rem,7vw,2.4rem);}
+  .hero-sub{font-size:0.875rem;}
+  .card{padding:16px;}
+  .container{padding:0 14px;}
+  #main-grid{grid-template-columns:1fr!important;}
   .players-bar{gap:8px;}
   .player-panel{padding:10px 14px;}
   .player-score{font-size:1.5rem;}
-  .modal{padding:28px 20px;}
+  .modal{padding:28px 18px;}
   .memory-grid{gap:6px;}
   .memory-card-face{font-size:1.3rem;}
+  .share-banner{flex-direction:column;gap:10px;}
+  .game-card-icon{font-size:1.8rem;margin-bottom:8px;}
+  .game-card{padding:16px 10px;}
+  .navbar{padding:10px 0;}
+  .logo-text{font-size:0.9rem;}
+  .btn-lg{padding:12px 20px;font-size:0.9rem;}
+  .toast{bottom:calc(20px + var(--safe-bottom));white-space:normal;text-align:center;max-width:90vw;}
+}
+@media(max-width:420px){
+  .game-cards{grid-template-columns:1fr 1fr;gap:8px;}
+  .game-card-desc{display:none;}
+  .game-card-icon{font-size:1.6rem;margin-bottom:6px;}
+  .game-card{padding:14px 8px;}
 }
 
 /* ═══════════════════════════════════════════════════════

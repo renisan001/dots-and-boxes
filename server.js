@@ -7,6 +7,16 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const rooms = new Map();
+const pongLoops = new Map();
+
+// ─── Pong Constants ──────────────────────────────────────────────────────────
+const PONG_Y1        = 0.93;  // Player 1 bottom paddle center-Y
+const PONG_Y2        = 0.07;  // Player 2 top paddle center-Y
+const PONG_PAD_HALF  = 0.16;  // Half the paddle width (normalized)
+const PONG_BALL_R    = 0.026; // Ball radius
+const PONG_SPEED_MIN = 0.010;
+const PONG_SPEED_MAX = 0.038;
+const PONG_WIN       = 7;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/game/:roomId', (req, res) => res.sendFile(path.join(__dirname, 'public', 'game.html')));
@@ -34,6 +44,105 @@ function createGomokuState() {
 
 const EMOJIS = ['🐶','🐱','🦊','🐻','🦁','🐯','🐸','🐧','🦋','🌸','🍕','🎸','🚀','🌈','🎯','🦄','🍦','🎭'];
 const PAIR_COUNTS = { 4: 8, 5: 12, 6: 18 };
+
+function _rSign() { return Math.random() < 0.5 ? 1 : -1; }
+
+function createPingPongState() {
+  const spd = PONG_SPEED_MIN + 0.002;
+  return {
+    ball:    { x: 0.5, y: 0.5, vx: _rSign() * spd * 0.7, vy: _rSign() * spd },
+    paddles: { 1: 0.5, 2: 0.5 },
+    scores:  { 1: 0, 2: 0 },
+    paused:  true,
+    pauseUntil: 0
+  };
+}
+
+function _resetPongBall(gs, scoredBy) {
+  const spd = PONG_SPEED_MIN + 0.002;
+  // After scoring, ball heads toward the player who LOST the point
+  const vy = scoredBy === 1 ? -spd : spd;
+  gs.ball = { x: 0.5, y: 0.5, vx: _rSign() * spd * 0.6, vy };
+  gs.paused     = true;
+  gs.pauseUntil = Date.now() + 1400;
+}
+
+function _tickPong(roomId) {
+  const room = rooms.get(roomId);
+  if (!room || room.status !== 'playing') { _stopPongLoop(roomId); return; }
+  const gs = room.gameState;
+
+  if (gs.paused) {
+    if (Date.now() >= gs.pauseUntil) gs.paused = false;
+    io.to(roomId).emit('pong_tick', { ball: gs.ball, paddles: gs.paddles, scores: gs.scores, paused: true });
+    return;
+  }
+
+  const b = gs.ball;
+  b.x += b.vx;
+  b.y += b.vy;
+
+  // Left / right wall bounce
+  if (b.x < PONG_BALL_R)        { b.x = PONG_BALL_R;        b.vx =  Math.abs(b.vx); }
+  if (b.x > 1 - PONG_BALL_R)   { b.x = 1 - PONG_BALL_R;    b.vx = -Math.abs(b.vx); }
+
+  // ── Player 2 top paddle ──
+  if (b.vy < 0 && b.y <= PONG_Y2 + PONG_BALL_R) {
+    const px = gs.paddles[2];
+    if (Math.abs(b.x - px) <= PONG_PAD_HALF + PONG_BALL_R) {
+      b.y  = PONG_Y2 + PONG_BALL_R;
+      b.vy = Math.abs(b.vy) * 1.05;
+      const off = (b.x - px) / PONG_PAD_HALF;
+      b.vx = off * 0.022;
+      const spd = Math.hypot(b.vx, b.vy);
+      if (spd > PONG_SPEED_MAX) { b.vx *= PONG_SPEED_MAX/spd; b.vy *= PONG_SPEED_MAX/spd; }
+    } else if (b.y < PONG_Y2) {
+      gs.scores[1]++;
+      io.to(roomId).emit('pong_goal', { scorer: 1, scores: gs.scores });
+      if (gs.scores[1] >= PONG_WIN) {
+        room.status = 'finished';
+        io.to(roomId).emit('game_over', { winner: 1, scores: gs.scores });
+        _stopPongLoop(roomId); broadcastRoomList(); return;
+      }
+      _resetPongBall(gs, 1);
+    }
+  }
+
+  // ── Player 1 bottom paddle ──
+  if (b.vy > 0 && b.y >= PONG_Y1 - PONG_BALL_R) {
+    const px = gs.paddles[1];
+    if (Math.abs(b.x - px) <= PONG_PAD_HALF + PONG_BALL_R) {
+      b.y  = PONG_Y1 - PONG_BALL_R;
+      b.vy = -Math.abs(b.vy) * 1.05;
+      const off = (b.x - px) / PONG_PAD_HALF;
+      b.vx = off * 0.022;
+      const spd = Math.hypot(b.vx, b.vy);
+      if (spd > PONG_SPEED_MAX) { b.vx *= PONG_SPEED_MAX/spd; b.vy *= PONG_SPEED_MAX/spd; }
+    } else if (b.y > PONG_Y1) {
+      gs.scores[2]++;
+      io.to(roomId).emit('pong_goal', { scorer: 2, scores: gs.scores });
+      if (gs.scores[2] >= PONG_WIN) {
+        room.status = 'finished';
+        io.to(roomId).emit('game_over', { winner: 2, scores: gs.scores });
+        _stopPongLoop(roomId); broadcastRoomList(); return;
+      }
+      _resetPongBall(gs, 2);
+    }
+  }
+
+  io.to(roomId).emit('pong_tick', { ball: b, paddles: gs.paddles, scores: gs.scores, paused: false });
+}
+
+function _startPongLoop(roomId) {
+  if (pongLoops.has(roomId)) return;
+  const id = setInterval(() => _tickPong(roomId), 33); // ~30 fps
+  pongLoops.set(roomId, id);
+}
+
+function _stopPongLoop(roomId) {
+  const id = pongLoops.get(roomId);
+  if (id !== undefined) { clearInterval(id); pongLoops.delete(roomId); }
+}
 
 function createMemoryState(gridSize) {
   const numPairs = PAIR_COUNTS[gridSize] || 8;
@@ -96,6 +205,7 @@ io.on('connection', (socket) => {
     let gameState;
     if (gameType === 'gomoku') gameState = createGomokuState();
     else if (gameType === 'memory') gameState = createMemoryState(gridSize);
+    else if (gameType === 'pong')   gameState = createPingPongState();
     else gameState = createDotsState(gridSize);
 
     rooms.set(roomId, { id: roomId, gameType, gridSize, players: [{ id: socket.id, number: 1 }], gameState, currentTurn: 1, status: 'waiting', createdAt: Date.now(), messages: [] });
@@ -112,6 +222,11 @@ io.on('connection', (socket) => {
     socket.join(roomId); socket.data.roomId = roomId; socket.data.playerNumber = 2;
     socket.emit('joined_room', { roomId, gameType: room.gameType, gridSize: room.gridSize, playerNumber: 2, gameState: room.gameState, currentTurn: room.currentTurn, messages: room.messages });
     io.to(roomId).emit('game_start', { gameType: room.gameType, gridSize: room.gridSize, currentTurn: room.currentTurn });
+    if (room.gameType === 'pong') {
+      room.gameState.paused = true;
+      room.gameState.pauseUntil = Date.now() + 2200;
+      setTimeout(() => _startPongLoop(roomId), 150);
+    }
     broadcastRoomList();
   });
 
@@ -122,6 +237,11 @@ io.on('connection', (socket) => {
     if (p) p.id = socket.id; else room.players.push({ id: socket.id, number: playerNumber });
     socket.join(roomId); socket.data.roomId = roomId; socket.data.playerNumber = playerNumber;
     socket.emit('game_state_sync', { roomId, gameType: room.gameType, gridSize: room.gridSize, playerNumber, gameState: room.gameState, currentTurn: room.currentTurn, status: room.status, messages: room.messages });
+    if (room.gameType === 'pong' && room.status === 'playing' && !pongLoops.has(roomId)) {
+      room.gameState.paused = true;
+      room.gameState.pauseUntil = Date.now() + 1500;
+      setTimeout(() => _startPongLoop(roomId), 150);
+    }
   });
 
   // ── Dots & Boxes ──
@@ -196,6 +316,15 @@ io.on('connection', (socket) => {
   });
 
   // ── Chat & Reactions ──
+  // ── Pong ──
+  socket.on('paddle_move', ({ x }) => {
+    const { roomId, playerNumber } = socket.data;
+    const room = rooms.get(roomId);
+    if (!room || room.gameType !== 'pong' || room.status !== 'playing') return;
+    const clamped = Math.max(0.12, Math.min(0.88, x));
+    room.gameState.paddles[playerNumber] = clamped;
+  });
+
   socket.on('send_reaction', ({ emoji }) => {
     const { roomId, playerNumber } = socket.data;
     if (!rooms.has(roomId)) return;
@@ -223,8 +352,12 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     if (!room) return;
     room.players = room.players.filter(p => p.id !== socket.id);
-    if (room.players.length === 0) setTimeout(() => { if (rooms.get(roomId)?.players.length === 0) { rooms.delete(roomId); broadcastRoomList(); } }, 30*60*1000);
-    else io.to(roomId).emit('opponent_disconnected');
+    if (room.players.length === 0) {
+      if (room.gameType === 'pong') _stopPongLoop(roomId);
+      setTimeout(() => { if (rooms.get(roomId)?.players.length === 0) { rooms.delete(roomId); broadcastRoomList(); } }, 30*60*1000);
+    } else {
+      io.to(roomId).emit('opponent_disconnected');
+    }
   });
 });
 

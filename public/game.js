@@ -33,6 +33,12 @@ function animateScore(el, val) {
 }
 function updateTurnBar(currentTurn, pNum, started) {
   if (!started) { turnBar.innerHTML = 'Waiting for opponent…'; turnBar.className = 'turn-bar'; return; }
+  if (gameType === 'pong') {
+    turnBar.innerHTML = '🏓 <strong>Real-time — slide your paddle to play!</strong>';
+    turnBar.className = 'turn-bar';
+    panelP1.classList.remove('active'); panelP2.classList.remove('active');
+    return;
+  }
   const myTurn = currentTurn === pNum;
   turnBar.className = `turn-bar ${currentTurn === 1 ? 'p1-turn' : 'p2-turn'}`;
   turnBar.innerHTML = myTurn ? '<strong>Your turn!</strong>' : `<strong>Opponent's turn</strong> — waiting…`;
@@ -118,6 +124,8 @@ function setupSocket() {
   socket.on('cards_matched',    d => { activeModule?.onCardsMatched?.(d);    updateScores(d.scores); updateTurnBar(d.currentTurn, playerNumber, true); });
   socket.on('cards_no_match',   d => { activeModule?.onCardsNoMatch?.(d);    updateTurnBar(d.currentTurn, playerNumber, true); });
   socket.on('cards_reset',      d => { activeModule?.onCardsReset?.(d); });
+  socket.on('pong_tick',        d => { activeModule?.onPongTick?.(d); });
+  socket.on('pong_goal',        d => { activeModule?.onGoal?.(d); });
   socket.on('game_over',        d => handleGameOver(d));
   socket.on('opponent_disconnected', () => { disconnBar.classList.add('show'); });
   socket.on('error_msg', ({ message }) => showToast('⚠️ ' + message));
@@ -133,6 +141,7 @@ function loadGameModule(gt, gs, gameState, currentTurn) {
   if (gt === 'dots')   { activeModule = DotsGame;   DotsGame.init(container, gs, gameState, currentTurn, playerNumber, socket); }
   if (gt === 'gomoku') { activeModule = GomokuGame; GomokuGame.init(container, gs, gameState, currentTurn, playerNumber, socket); }
   if (gt === 'memory') { activeModule = MemoryGame; MemoryGame.init(container, gs, gameState, currentTurn, playerNumber, socket); }
+  if (gt === 'pong')   { activeModule = PongGame;   PongGame.init(container, gs, gameState, currentTurn, playerNumber, socket); }
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────

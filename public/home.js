@@ -10,7 +10,8 @@ let activeFilter = 'all';
 const GAME_INFO = {
   dots:   { label: 'Dots & Boxes', icon: '⬛', grids: [3,4,5,6], gridLabel: g => `${g}×${g} grid (${g*g} boxes)` },
   gomoku: { label: 'Gomoku', icon: '🔵', grids: [], gridLabel: () => '15×15 board · first to 5 in a row' },
-  memory: { label: 'Memory', icon: '🃏', grids: [4,5,6], gridLabel: g => ({ 4:'4×4 (8 pairs)', 5:'4×6 (12 pairs)', 6:'6×6 (18 pairs)' })[g] }
+  memory: { label: 'Memory', icon: '🃏', grids: [4,5,6], gridLabel: g => ({ 4:'4×4 (8 pairs)', 5:'4×6 (12 pairs)', 6:'6×6 (18 pairs)' })[g] },
+  pong:   { label: 'Ping Pong', icon: '🏓', grids: [], gridLabel: () => 'Vertical real-time · first to 7 wins' }
 };
 
 const HOW_TO = {
@@ -29,6 +30,12 @@ const HOW_TO = {
     <div class="how-to-step"><div class="step-num">2</div><p class="step-text"><strong>Match!</strong> If both cards are the same, you claim the pair and go again.</p></div>
     <div class="how-to-step"><div class="step-num">3</div><p class="step-text"><strong>No match?</strong> Cards flip back and your opponent goes.</p></div>
     <div class="how-to-step"><div class="step-num">4</div><p class="step-text"><strong>Most pairs</strong> when all cards are matched = winner.</p></div>
+  </div></details>`,
+  pong: `<details class="how-to"><summary>How to Play <span class="chev">▾</span></summary><div class="how-to-body">
+    <div class="how-to-step"><div class="step-num">1</div><p class="step-text"><strong>You control</strong> a paddle at the bottom (P1) or top (P2) of the screen.</p></div>
+    <div class="how-to-step"><div class="step-num">2</div><p class="step-text"><strong>Slide</strong> left/right (touch on mobile, mouse on desktop) to move your paddle.</p></div>
+    <div class="how-to-step"><div class="step-num">3</div><p class="step-text"><strong>Don't miss</strong> the ball or your opponent scores a point.</p></div>
+    <div class="how-to-step"><div class="step-num">4</div><p class="step-text"><strong>First to 7 points</strong> wins. Ball speeds up as the rally continues!</p></div>
   </div></details>`
 };
 
@@ -116,8 +123,8 @@ socket.on('error_msg', ({ message }) => {
 });
 
 // ─── Room List ────────────────────────────────────────────────────────────────
-const GAME_ICONS = { dots: '⬛', gomoku: '🔵', memory: '🃏' };
-const GAME_NAMES = { dots: 'Dots & Boxes', gomoku: 'Gomoku', memory: 'Memory' };
+const GAME_ICONS = { dots: '⬛', gomoku: '🔵', memory: '🃏', pong: '🏓' };
+const GAME_NAMES = { dots: 'Dots & Boxes', gomoku: 'Gomoku', memory: 'Memory', pong: 'Ping Pong' };
 
 function renderRooms(rooms) {
   const filtered = activeFilter === 'all' ? rooms : rooms.filter(r => r.gameType === activeFilter);
