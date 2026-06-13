@@ -5,7 +5,11 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: { origin: '*', methods: ['GET', 'POST'] },
+  pingTimeout: 20000,
+  pingInterval: 25000
+});
 const rooms = new Map();
 const pongLoops = new Map();
 
@@ -19,6 +23,7 @@ const PONG_SPEED_MAX = 0.038;
 const PONG_WIN       = 7;
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok', rooms: rooms.size, ts: Date.now() }));
 app.get('/game/:roomId', (req, res) => res.sendFile(path.join(__dirname, 'public', 'game.html')));
 app.get('/api/rooms', (req, res) => {
   const list = [];
@@ -354,7 +359,8 @@ io.on('connection', (socket) => {
     room.players = room.players.filter(p => p.id !== socket.id);
     if (room.players.length === 0) {
       if (room.gameType === 'pong') _stopPongLoop(roomId);
-      setTimeout(() => { if (rooms.get(roomId)?.players.length === 0) { rooms.delete(roomId); broadcastRoomList(); } }, 30*60*1000);
+      // Clean up empty room after 5 minutes (was 30)
+      setTimeout(() => { if (rooms.get(roomId)?.players.length === 0) { rooms.delete(roomId); broadcastRoomList(); } }, 5 * 60 * 1000);
     } else {
       io.to(roomId).emit('opponent_disconnected');
     }

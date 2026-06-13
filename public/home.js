@@ -1,6 +1,11 @@
 /* home.js — Game lobby logic */
 
-const socket = io();
+const socket = io({
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000
+});
 let selectedGame = null;
 let selectedGrid = 4;
 let creating = false;
@@ -172,9 +177,30 @@ document.getElementById('refresh-btn').addEventListener('click', () => {
 // Initial fetch
 fetch('/api/rooms').then(r => r.json()).then(data => { allRooms = data; renderRooms(data); });
 
+// ─── Connection Status ────────────────────────────────────────────────────────
+socket.on('connect', () => {
+  // Re-fetch rooms on reconnect
+  fetch('/api/rooms').then(r => r.json()).then(data => { allRooms = data; renderRooms(data); });
+});
+
+socket.on('disconnect', (reason) => {
+  if (reason !== 'io client disconnect') {
+    showToast('⚠️ Connection lost. Reconnecting…', 5000);
+    creating = false;
+    const btn = document.getElementById('create-btn');
+    const txt = document.getElementById('create-text');
+    const ico = document.getElementById('create-icon');
+    if (btn) { btn.disabled = false; if(txt) txt.textContent = 'Create Room'; if(ico) ico.textContent = '✦'; }
+  }
+});
+
+socket.on('connect_error', () => {
+  showToast('❌ Cannot reach server. Retrying…', 4000);
+});
+
 // ─── Toast ────────────────────────────────────────────────────────────────────
-function showToast(msg) {
+function showToast(msg, dur = 3000) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  setTimeout(() => t.classList.remove('show'), dur);
 }

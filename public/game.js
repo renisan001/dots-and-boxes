@@ -71,7 +71,12 @@ function handleGameOver(data) {
 
 // ─── Socket Setup ─────────────────────────────────────────────────────────────
 function setupSocket() {
-  socket = io();
+  socket = io({
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000
+  });
 
   socket.on('joined_room', d => {
     playerNumber = d.playerNumber; gameType = d.gameType; gridSize = d.gridSize;
@@ -129,6 +134,24 @@ function setupSocket() {
   socket.on('game_over',        d => handleGameOver(d));
   socket.on('opponent_disconnected', () => { disconnBar.classList.add('show'); });
   socket.on('error_msg', ({ message }) => showToast('⚠️ ' + message));
+
+  // Connection health
+  socket.on('disconnect', (reason) => {
+    if (reason !== 'io client disconnect') {
+      showToast('⚠️ Connection lost. Reconnecting…', 5000);
+    }
+  });
+  socket.on('connect', () => {
+    // On reconnect, try to re-sync the game room
+    if (roomId && playerNumber) {
+      socket.emit('rejoin_room', { roomId, playerNumber });
+      showToast('✅ Reconnected!', 2500);
+    }
+  });
+  socket.on('connect_error', () => {
+    showToast('❌ Cannot reach server. Retrying…', 4000);
+  });
+
   // Chat & Reaction events
   socket.on('reaction_received', d => ChatSystem.onReactionReceived(d));
   socket.on('message_received',  d => ChatSystem.onMessageReceived(d));
